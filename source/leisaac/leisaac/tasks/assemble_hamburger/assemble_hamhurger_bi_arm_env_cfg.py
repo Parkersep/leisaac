@@ -18,14 +18,18 @@ from ..template import (
 class AssembleHamburgerBiArmSceneCfg(BiArmTaskSceneCfg):
     """Scene configuration for the assemble hamburger task using two arms."""
 
-    scene: AssetBaseCfg = KITCHEN_WITH_HAMBURGER_CFG.replace(prim_path="{ENV_REGEX_NS}/Scene")
+    scene: AssetBaseCfg = KITCHEN_WITH_HAMBURGER_CFG.replace(
+        prim_path="{ENV_REGEX_NS}/Scene"
+    )
 
 
 @configclass
 class AssembleHamburgerBiArmEnvCfg(BiArmTaskEnvCfg):
     """Configuration for the assemble hamburger environment."""
 
-    scene: AssembleHamburgerBiArmSceneCfg = AssembleHamburgerBiArmSceneCfg(env_spacing=8.0)
+    scene: AssembleHamburgerBiArmSceneCfg = AssembleHamburgerBiArmSceneCfg(
+        env_spacing=8.0
+    )
 
     observations: BiArmObservationsCfg = BiArmObservationsCfg()
 

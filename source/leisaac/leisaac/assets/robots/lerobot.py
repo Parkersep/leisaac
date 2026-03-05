@@ -42,7 +42,13 @@ SO101_FOLLOWER_CFG = ArticulationCfg(
             damping=0.60,
         ),
         "sts3215-arm": ImplicitActuatorCfg(
-            joint_names_expr=["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll"],
+            joint_names_expr=[
+                "shoulder_pan",
+                "shoulder_lift",
+                "elbow_flex",
+                "wrist_flex",
+                "wrist_roll",
+            ],
             effort_limit_sim=10,
             velocity_limit_sim=10,
             stiffness=17.8,
@@ -120,7 +126,13 @@ LEKIWI_CFG = ArticulationCfg(
             damping=1.2,
         ),
         "sts3215-arm": ImplicitActuatorCfg(
-            joint_names_expr=["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll"],
+            joint_names_expr=[
+                "shoulder_pan",
+                "shoulder_lift",
+                "elbow_flex",
+                "wrist_flex",
+                "wrist_roll",
+            ],
             effort_limit_sim=10,
             velocity_limit_sim=10,
             stiffness=12.8,
@@ -128,6 +140,85 @@ LEKIWI_CFG = ArticulationCfg(
         ),
         "sts3215-base": ImplicitActuatorCfg(
             joint_names_expr=["base_x", "base_y", "base_theta"],
+            effort_limit_sim=10000.0,
+            velocity_limit_sim=100.0,
+            stiffness=0.0,
+            damping=10000.0,
+        ),
+    },
+    soft_joint_pos_limit_factor=1.0,
+)
+
+# Asset path based on the provided directory structure
+XLEROBOT_ASSET_PATH = "assets/robots/xlerobot/xlerobot/xlerobot.usd"
+
+XLEROBOT_CFG = ArticulationCfg(
+    spawn=sim_utils.UsdFileCfg(
+        usd_path=str(XLEROBOT_ASSET_PATH),
+        rigid_props=sim_utils.RigidBodyPropertiesCfg(
+            disable_gravity=False,
+        ),
+        articulation_props=sim_utils.ArticulationRootPropertiesCfg(
+            enabled_self_collisions=True,
+            solver_position_iteration_count=4,
+            solver_velocity_iteration_count=4,
+            fix_root_link=False,
+        ),
+    ),
+    init_state=ArticulationCfg.InitialStateCfg(
+        pos=(0.0, 0.0, 0.0),
+        rot=(1.0, 0.0, 0.0, 0.0),
+        joint_pos={
+            # Arm 1 Joints mapped to 0.0 starting position
+            "Rotation": 0.0,
+            "Pitch": 0.0,
+            "Elbow": 0.0,
+            "Wrist_Pitch": 0.0,
+            "Wrist_Roll": 0.0,
+            "Jaw": 0.0,
+            # Arm 2 Joints mapped to 0.0 starting position
+            "Rotation_2": 0.0,
+            "Pitch_2": 0.0,
+            "Elbow_2": 0.0,
+            "Wrist_Pitch_2": 0.0,
+            "Wrist_Roll_2": 0.0,
+            "Jaw_2": 0.0,
+            # Mobile Base Joints mapped to 0.0 starting position
+            "root_x_axis_joint": 0.0,
+            "root_y_axis_joint": 0.0,
+            "root_z_rotation_joint": 0.0,
+        },
+    ),
+    actuators={
+        "sts3215_arms": ImplicitActuatorCfg(
+            # We use regex to apply this actuator config to all rotation/pitch/elbow/wrist joints on both arms
+            joint_names_expr=[
+                "Rotation.*",
+                "Pitch.*",
+                "Elbow.*",
+                "Wrist_Pitch.*",
+                "Wrist_Roll.*",
+            ],
+            effort_limit_sim=10.0,
+            velocity_limit_sim=10.0,
+            stiffness=15.0,
+            damping=1.0,
+        ),
+        "sts3215_grippers": ImplicitActuatorCfg(
+            # We use regex to apply this to Jaw and Jaw_2
+            joint_names_expr=["Jaw.*"],
+            effort_limit_sim=10.0,
+            velocity_limit_sim=10.0,
+            stiffness=15.0,
+            damping=0.6,
+        ),
+        "base_actuator": ImplicitActuatorCfg(
+            # We explicitly target the root joints for the base actuator
+            joint_names_expr=[
+                "root_x_axis_joint",
+                "root_y_axis_joint",
+                "root_z_rotation_joint",
+            ],
             effort_limit_sim=10000.0,
             velocity_limit_sim=100.0,
             stiffness=0.0,
