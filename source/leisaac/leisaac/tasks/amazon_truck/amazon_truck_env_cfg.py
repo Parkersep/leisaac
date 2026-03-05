@@ -46,7 +46,7 @@ class AmazonTruckBiArmSceneCfg(BiArmTaskSceneCfg):
         self.left_arm = XLEROBOT_CFG.replace(
             prim_path="{ENV_REGEX_NS}/Robot",
             init_state=XLEROBOT_CFG.init_state.replace(
-                pos=(2, 3.5, -1), rot=(0.7071, 0.0, 0.0, 0.7071)
+                pos=(2, 3.6, -1), rot=(0.7071, 0.0, 0.0, 0.7071)
             ),
         )
 
@@ -54,6 +54,7 @@ class AmazonTruckBiArmSceneCfg(BiArmTaskSceneCfg):
         self.right_arm = None
 
         # Attaching sensors to native USD links via child prims (/isaac_camera) to avoid naming collisions.
+        # TODO: update the position and rotation of the cameras to be correct
         # We explicitly zero out the offsets because the links in the custom USD are already perfectly placed.
         self.left_wrist = self.left_wrist.replace(
             prim_path="{ENV_REGEX_NS}/Robot/Fixed_Jaw_2/Left_Arm_Camera/isaac_camera"
