@@ -150,7 +150,7 @@ LEKIWI_CFG = ArticulationCfg(
 )
 
 # Asset path based on the provided directory structure
-XLEROBOT_ASSET_PATH = "assets/robots/xlerobot/xlerobot/xlerobot.usd"
+XLEROBOT_ASSET_PATH = "assets/robots/xlerobot/xlerobot.usd"
 
 XLEROBOT_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
@@ -159,7 +159,7 @@ XLEROBOT_CFG = ArticulationCfg(
             disable_gravity=False,
         ),
         articulation_props=sim_utils.ArticulationRootPropertiesCfg(
-            enabled_self_collisions=True,
+            enabled_self_collisions=False,
             solver_position_iteration_count=4,
             solver_velocity_iteration_count=4,
             fix_root_link=False,
@@ -169,21 +169,21 @@ XLEROBOT_CFG = ArticulationCfg(
         pos=(0.0, 0.0, 0.0),
         rot=(1.0, 0.0, 0.0, 0.0),
         joint_pos={
-            # Arm 1 Joints mapped to 0.0 starting position
+            # Left Arm Home Pose
             "Rotation": 0.0,
-            "Pitch": 0.0,
-            "Elbow": 0.0,
-            "Wrist_Pitch": 0.0,
-            "Wrist_Roll": 0.0,
-            "Jaw": 0.0,
-            # Arm 2 Joints mapped to 0.0 starting position
+            "Pitch": 1.69,  # -100 degrees to match real middle position
+            "Elbow": 1.5708,  # 90 degrees to match real middle position
+            "Wrist_Pitch": 0.0,  # Kept at default
+            "Wrist_Roll": 0.0,  # Kept at default
+            "Jaw": 0,  # Kept slightly offset to prevent limit crash
+            # Right Arm Mirrored Home Pose
             "Rotation_2": 0.0,
-            "Pitch_2": 0.0,
-            "Elbow_2": 0.0,
+            "Pitch_2": 1.69,
+            "Elbow_2": 1.5708,
             "Wrist_Pitch_2": 0.0,
             "Wrist_Roll_2": 0.0,
-            "Jaw_2": 0.0,
-            # Mobile Base Joints mapped to 0.0 starting position
+            "Jaw_2": 0,
+            # Mobile Base
             "root_x_axis_joint": 0.0,
             "root_y_axis_joint": 0.0,
             "root_z_rotation_joint": 0.0,
@@ -191,7 +191,6 @@ XLEROBOT_CFG = ArticulationCfg(
     ),
     actuators={
         "sts3215_arms": ImplicitActuatorCfg(
-            # We use regex to apply this actuator config to all rotation/pitch/elbow/wrist joints on both arms
             joint_names_expr=[
                 "Rotation.*",
                 "Pitch.*",
@@ -201,11 +200,12 @@ XLEROBOT_CFG = ArticulationCfg(
             ],
             effort_limit_sim=10.0,
             velocity_limit_sim=10.0,
-            stiffness=15.0,
+            # We use a higher stiffness (25.0) than SO101 to ensure the unified mesh
+            # has enough simulated torque to hold its own weight.
+            stiffness=25.0,
             damping=1.0,
         ),
         "sts3215_grippers": ImplicitActuatorCfg(
-            # We use regex to apply this to Jaw and Jaw_2
             joint_names_expr=["Jaw.*"],
             effort_limit_sim=10.0,
             velocity_limit_sim=10.0,
@@ -213,7 +213,6 @@ XLEROBOT_CFG = ArticulationCfg(
             damping=0.6,
         ),
         "base_actuator": ImplicitActuatorCfg(
-            # We explicitly target the root joints for the base actuator
             joint_names_expr=[
                 "root_x_axis_joint",
                 "root_y_axis_joint",
