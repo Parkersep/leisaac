@@ -52,6 +52,32 @@ def init_action_cfg(action_cfg, device):
             joint_names=["gripper"],
             scale=1.0,
         )
+    elif device in ["unified_hybrid_teleop"]:
+        action_cfg.left_arm_action = mdp.JointPositionActionCfg(
+            asset_name="left_arm",
+            joint_names=["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll"],
+            scale=1.0,
+        )
+        action_cfg.left_gripper_action = mdp.JointPositionActionCfg(
+            asset_name="left_arm",
+            joint_names=["gripper"],
+            scale=1.0,
+        )
+        action_cfg.right_arm_action = mdp.JointPositionActionCfg(
+            asset_name="left_arm",
+            joint_names=["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll"],
+            scale=1.0,
+        )
+        action_cfg.right_gripper_action = mdp.JointPositionActionCfg(
+            asset_name="left_arm",
+            joint_names=["gripper"],
+            scale=1.0,
+        )
+        action_cfg.base_action = mdp.JointVelocityActionCfg(
+            asset_name="left_arm",
+            joint_names=["root_x_axis_joint", "root_y_axis_joint", "root_z_rotation_joint"],
+            scale=1.0,
+        )
     elif device in ["mimic_so101leader"]:
         action_cfg.arm_action = mdp.DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
@@ -137,6 +163,15 @@ def preprocess_device_action(action: dict[str, Any], teleop_device) -> torch.Ten
         processed_action[:, 6:] = convert_action_from_so101_leader(
             action["joint_state"]["right_arm"], action["motor_limits"]["right_arm"], teleop_device
         )
+    elif action.get("unified_hybrid_teleop") is not None:
+        processed_action = torch.zeros(teleop_device.env.num_envs, 15, device=teleop_device.env.device)
+        processed_action[:, :6] = convert_action_from_so101_leader(
+            action["joint_state"]["left_arm"], action["motor_limits"]["left_arm"], teleop_device
+        )
+        processed_action[:, 6:12] = convert_action_from_so101_leader(
+            action["joint_state"]["right_arm"], action["motor_limits"]["right_arm"], teleop_device
+        )
+        processed_action[:, 12:15] = torch.tensor(action["joint_state"]["base_action"], device=teleop_device.env.device)
     elif action.get("lekiwi-leader") is not None:
         processed_action = torch.zeros(teleop_device.env.num_envs, 9, device=teleop_device.env.device)
         processed_action[:, :6] = convert_action_from_so101_leader(

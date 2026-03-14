@@ -140,18 +140,25 @@ class XLE_leader(Device):
 
         base_action = np.array([world_vx, world_vy, world_vtheta])
 
-        raw_left = np.array(self.left_leader.get_device_state())
-        raw_right = np.array(self.right_leader.get_device_state())
+        raw_left = self.left_leader.get_device_state()
+        raw_right = self.right_leader.get_device_state()
 
-        # WHY: Slicing the 6-element raw hardware array into 5 arm joints and 1 gripper joint
-        # perfectly matches the action space mappings defined in your environment config.
         return {
             "base_action": base_action,
-            "left_arm_action": raw_left[0:5],
-            "left_gripper_action": raw_left[5:6],
-            "right_arm_action": raw_right[0:5],
-            "right_gripper_action": raw_right[5:6],
+            "left_arm": raw_left,
+            "right_arm": raw_right,
         }
+
+    def input2action(self) -> Dict[str, Any]:
+        """
+        Adds hardware motor limits required for action processing.
+        """
+        ac_dict = super().input2action()
+        ac_dict["motor_limits"] = {
+            "left_arm": self.left_leader.motor_limits,
+            "right_arm": self.right_leader.motor_limits,
+        }
+        return ac_dict
 
     def reset(self) -> None:
         """

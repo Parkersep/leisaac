@@ -4,7 +4,7 @@ import isaaclab.sim as sim_utils
 from isaaclab.assets import AssetBaseCfg
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
-from isaaclab.envs.mdp import JointPositionActionCfg
+from isaaclab.envs.mdp import JointPositionActionCfg, JointVelocityActionCfg
 
 # Device hardware calibration helper
 from leisaac.devices.action_process import init_action_cfg
@@ -22,7 +22,15 @@ from leisaac.tasks.template.bi_arm_env_cfg import (
     BiArmTaskSceneCfg,
     BiArmObservationsCfg,
     BiArmTerminationsCfg,
+    BiArmActionsCfg,
 )
+
+
+@configclass
+class AmazonTruckBiArmActionsCfg(BiArmActionsCfg):
+    """Configuration for the actions with a mobile base."""
+
+    base_action: JointVelocityActionCfg = MISSING
 
 
 @configclass
@@ -82,6 +90,7 @@ class AmazonTruckBiArmEnvCfg(BiArmTaskEnvCfg):
     """
 
     scene: AmazonTruckBiArmSceneCfg = AmazonTruckBiArmSceneCfg(env_spacing=8.0)
+    actions: AmazonTruckBiArmActionsCfg = AmazonTruckBiArmActionsCfg()
     observations: BiArmObservationsCfg = BiArmObservationsCfg()
     terminations: BiArmTerminationsCfg = BiArmTerminationsCfg()
 
@@ -139,6 +148,12 @@ class AmazonTruckBiArmEnvCfg(BiArmTaskEnvCfg):
         self.actions.right_gripper_action = JointPositionActionCfg(
             asset_name="left_arm",
             joint_names=["Jaw_2"],
+            scale=1.0,
+            use_default_offset=True,
+        )
+        self.actions.base_action = JointVelocityActionCfg(
+            asset_name="left_arm",
+            joint_names=["root_x_axis_joint", "root_y_axis_joint", "root_z_rotation_joint"],
             scale=1.0,
             use_default_offset=True,
         )
