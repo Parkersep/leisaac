@@ -4,7 +4,7 @@ import torch
 from typing import Any, Dict
 
 from leisaac.devices.device_base import Device
-from leisaac.devices.so101_leader import SO101Leader
+from ..lerobot.so101_leader import SO101Leader
 
 
 class XLE_leader(Device):
@@ -24,7 +24,7 @@ class XLE_leader(Device):
         Initializes the hybrid device, configures speed scaling, and connects to the physical arms.
         """
         # WHY: We call super to hook into the Omniverse carb input system for keyboard events.
-        super().__init__(env, "unified_hybrid_teleop")
+        super().__init__(env, "xle-leader")
 
         # WHY: Defines speed levels so the operator can switch gears for fine-tuning movements in tight spaces.
         self._speed_levels = [
@@ -77,6 +77,12 @@ class XLE_leader(Device):
             "D": "right",
             "Z": "rotate_left",
             "X": "rotate_right",
+            "KEY_W": "forward",
+            "KEY_S": "backward",
+            "KEY_A": "left",
+            "KEY_D": "right",
+            "KEY_Z": "rotate_left",
+            "KEY_X": "rotate_right",
         }
 
     def _add_device_control_description(self) -> None:
@@ -101,6 +107,7 @@ class XLE_leader(Device):
 
             if event.input.name in self._WHEEL_INPUT_KEY_MAPPING.keys():
                 vel_key = self._WHEEL_INPUT_KEY_MAPPING[event.input.name]
+                print(f"Base command: {vel_key}")
                 scale_key = "theta_vel" if "rotate" in vel_key else "xy_vel"
 
                 # WHY: Using '+=' allows the operator to press 'W' and 'A' simultaneously to strafe diagonally.
@@ -112,7 +119,15 @@ class XLE_leader(Device):
         if event.type == carb.input.KeyboardEventType.KEY_RELEASE:
             # WHY: Acts as a dead-man's switch. Zeroing the buffer instantly stops the robot when the key is released.
             if event.input.name in self._WHEEL_INPUT_KEY_MAPPING.keys():
-                self._vel_command[:] = 0.0
+                vel_key = self._WHEEL_INPUT_KEY_MAPPING[event.input.name]
+                scale_key = "theta_vel" if "rotate" in vel_key else "xy_vel"
+                self._vel_command -= (
+                    self._VEL_COMMAND_MAPPING[vel_key]
+                    * self._speed_levels[self._speed_index][scale_key]
+                )
+                # Ensure we don't have small floating point errors near zero
+                if np.all(np.abs(self._vel_command) < 1e-5):
+                    self._vel_command[:] = 0.0
 
     def get_device_state(self) -> Dict[str, np.ndarray]:
         """

@@ -8,6 +8,7 @@ from isaaclab.envs.mdp import JointPositionActionCfg, JointVelocityActionCfg
 
 # Device hardware calibration helper
 from leisaac.devices.action_process import init_action_cfg
+from dataclasses import MISSING
 
 # Importing scene and robot configs
 from leisaac.assets.scenes.amazon_truck import amazon_truck_scene
@@ -153,7 +154,11 @@ class AmazonTruckBiArmEnvCfg(BiArmTaskEnvCfg):
         )
         self.actions.base_action = JointVelocityActionCfg(
             asset_name="left_arm",
-            joint_names=["root_x_axis_joint", "root_y_axis_joint", "root_z_rotation_joint"],
+            joint_names=[
+                "root_x_axis_joint",
+                "root_y_axis_joint",
+                "root_z_rotation_joint",
+            ],
             scale=1.0,
             use_default_offset=True,
         )

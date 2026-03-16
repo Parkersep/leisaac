@@ -3,3 +3,4 @@ from .gamepad import SO101Gamepad
 from .keyboard import SO101Keyboard
 from .lekiwi import LeKiwiGamepad, LeKiwiKeyboard, LeKiwiLeader
 from .lerobot import BiSO101Leader, SO101Leader
+from .XLE.xle_leader import XLE_leader

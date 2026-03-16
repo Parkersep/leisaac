@@ -1,0 +1,177 @@
+
+ ##### with the new arms 
+ 
+ run this or it will take hours. "conda install -c conda-forge flash-attn"
+ 
+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
+pip install flash-attn==2.8.0.post2 --no-build-isolation --no-binary flash-attn
+pip uninstall -y flash-attn
+pip install transformers==4.51.3
+
+close arm 
+/dev/ttyACM0
+
+lerobot-calibrate \
+    --robot.type=so101_follower \
+    --robot.port=/dev/ttyACM0 \
+    --robot.id=so101_close_follower_arm
+    
+far arm 
+/dev/ttyACM1
+
+lerobot-calibrate \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/ttyACM1 \
+    --teleop.id=so101_far_leader_arm
+    
+   teleoperate
+   
+   lerobot-teleoperate \
+    --robot.type=so101_follower \
+    --robot.port=/dev/ttyACM0 \
+    --robot.id=so101_close_follower_arm \
+    --teleop.type=so101_leader \
+    --teleop.port=/dev/ttyACM1 \
+    --teleop.id=so101_far_leader_arm
+    
+  ################# Groot
+  
+  python scripts/gr00t_finetune.py \
+   --dataset-path ./demo_data/so101-table-cleanup/ \
+   --num-gpus 1 \
+   --output-dir ./so101-checkpoints  \
+   --max-steps 10000 \
+   --data-config so100_dualcam \
+   --video-backend torchvision_av \
+   --no-tune-diffusion-model
+   
+###############Isaac Sim
+#######
+from pxr import Gf
+import omni.usd
+#
+from pxr import Gf
+import omni.usd
+
+# Your exact path from the image
+target_prim_path = "/World/envs/env_0/Scene/truck/Amazon_Electric_Delivery_Van_02"
+
+# Get the current open stage
+stage = omni.usd.get_context().get_stage()
+prim = stage.GetPrimAtPath(target_prim_path)
+
+# Check if the prim exists, then calculate the global position
+if prim.IsValid():
+    matrix: Gf.Matrix4d = omni.usd.get_world_transform_matrix(prim)
+    translate: Gf.Vec3d = matrix.ExtractTranslation()
+    
+    print("\n" + "="*40)
+    print("SUCCESS: Found Global Coordinates!")
+    print(f"X: {translate[0]:.4f}")
+    print(f"Y: {translate[1]:.4f}")
+    print(f"Z: {translate[2]:.4f}")
+    print("="*40 + "\n")
+else:
+    print(f"\nERROR: Could not find anything at '{target_prim_path}'.")
+    print("Double-check the path in your Stage tree!\n")
+    
+ ################3
+  python scripts/environments/teleoperation/teleop_se3_agent.py \
+    --task=LeIsaac-SO101-PickOrange-v0 \
+    --teleop_device=so101_leader \
+    --port=/dev/ttyACM1 \
+    --num_envs=1 \
+    --device=cuda \
+    --enable_cameras \
+    --record \
+    --dataset_file=./datasets/dataset.hdf5
+    
+   python scripts/environments/teleoperation/teleop_se3_agent.py \
+    --task=LeIsaac-SO101-PickOrange-v0 \
+    --teleop_device=so101leader \
+    --port=/dev/ttyACM1 \
+    --num_envs=1 \
+    --device=cuda \
+    --enable_cameras \
+    --record \
+    --dataset_file=./datasets/dataset.hdf5
+    
+    python scripts/environments/teleoperation/teleop_se3_agent.py \
+    --task=LeIsaac-XLeRobot-AmazonTruck-v0 \
+    --teleop_device=bi-so101leader \
+    --left_arm_port=/dev/ttyACM0 \
+    --right_arm_port=/dev/ttyACM1 \
+    --num_envs=1 \
+    --device=cuda \
+    --enable_cameras
+    
+        python scripts/environments/teleoperation/teleop_se3_agent.py \
+    --task=LeIsaac-XLeRobot-AmazonTruck-v0 \
+    --teleop_device=bi-so101leader \
+    --left_arm_port=/dev/ttyACM0 \
+    --right_arm_port=/dev/ttyACM1 \
+    --num_envs=1 \
+    --device=cuda \
+    --enable_cameras
+    
+    python scripts/environments/teleoperation/teleop_se3_agent.py \
+    --task=LeIsaac-XLeRobot-AmazonTruck-v0 \
+    --teleop_device=bi-so101leader \
+    --left_arm_port=/dev/ttyACM0 \
+    --right_arm_port=/dev/ttyACM1 \
+    --num_envs=1 \
+    --device=cuda \
+    --enable_cameras \
+    --recalibrate
+    
+    
+    
+    import omni.usd
+from pxr import UsdPhysics, Gf
+import math
+
+# Define your known SO101 limits (in degrees) from your configuration
+so101_limits = {
+    "Rotation": (-110.0, 110.0),    # shoulder_pan
+    "Pitch": (-100.0, 100.0),       # shoulder_lift
+    "Elbow": (-100.0, 90.0),        # elbow_flex
+    "Wrist_Pitch": (-95.0, 95.0),   # wrist_flex
+    "Wrist_Roll": (-160.0, 160.0),  # wrist_roll
+    "Jaw": (-10.0, 100.0)           # gripper
+}
+
+def sync_usd_limits(robot_root_path="/World/envs/env_0/Robot"):
+    """
+    Overwrites USD revolute joint limits to match SO101 hardware specs.
+    Processes both the primary arm and the '_2' suffixed joints.
+    """
+    stage = omni.usd.get_context().get_stage()
+    
+    print(f"--- Updating Joint Limits for {robot_root_path} ---")
+
+    for joint_base_name, (low_deg, high_deg) in so101_limits.items():
+        # Handle both arms by checking for the base name and the suffix
+        for suffix in ["", "_2"]:
+            joint_name = f"{joint_base_name}{suffix}"
+            
+            # Search the stage for the joint prim
+            # Based on your image, they may be under a 'joints' scope or nested
+            found_prim = None
+            for prim in stage.Traverse():
+                if prim.GetName() == joint_name and prim.IsA(UsdPhysics.RevoluteJoint):
+                    found_prim = prim
+                    break
+            
+            if found_prim:
+                joint = UsdPhysics.RevoluteJoint(found_prim)
+                
+                # Overwrite limits (Isaac Sim stores these as degrees in the backend for RevoluteJoint)
+                joint.GetLowerLimitAttr().Set(low_deg)
+                joint.GetUpperLimitAttr().Set(high_deg)
+                
+                print(f"SUCCESS: {joint_name} set to ({low_deg}, {high_deg}) degrees.")
+            else:
+                print(f"WARNING: Joint '{joint_name}' not found in the stage.")
+
+# Run the update
+sync_usd_limits()

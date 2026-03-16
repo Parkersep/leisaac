@@ -52,7 +52,7 @@ def init_action_cfg(action_cfg, device):
             joint_names=["gripper"],
             scale=1.0,
         )
-    elif device in ["unified_hybrid_teleop"]:
+    elif device in ["unified_hybrid_teleop", "xle-leader"]:
         action_cfg.left_arm_action = mdp.JointPositionActionCfg(
             asset_name="left_arm",
             joint_names=["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll"],
@@ -163,7 +163,7 @@ def preprocess_device_action(action: dict[str, Any], teleop_device) -> torch.Ten
         processed_action[:, 6:] = convert_action_from_so101_leader(
             action["joint_state"]["right_arm"], action["motor_limits"]["right_arm"], teleop_device
         )
-    elif action.get("unified_hybrid_teleop") is not None:
+    elif action.get("unified_hybrid_teleop") is not None or action.get("xle-leader") is not None or action.get("xle_leader") is not None:
         processed_action = torch.zeros(teleop_device.env.num_envs, 15, device=teleop_device.env.device)
         processed_action[:, :6] = convert_action_from_so101_leader(
             action["joint_state"]["left_arm"], action["motor_limits"]["left_arm"], teleop_device

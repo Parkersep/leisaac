@@ -30,6 +30,7 @@ parser.add_argument(
         "lekiwi-keyboard",
         "lekiwi-gamepad",
         "lekiwi-leader",
+        "xle-leader",
     ],
     help="Device for interacting with environment",
 )
@@ -267,10 +268,16 @@ def main():  # noqa: C901
         from leisaac.devices import LeKiwiGamepad
 
         teleop_interface = LeKiwiGamepad(env, sensitivity=args_cli.sensitivity)
+    elif args_cli.teleop_device == "xle-leader":
+        from leisaac.devices import XLE_leader
+
+        teleop_interface = XLE_leader(
+            env, left_port=args_cli.left_arm_port, right_port=args_cli.right_arm_port, recalibrate=args_cli.recalibrate
+        )
     else:
         raise ValueError(
             f"Invalid device interface '{args_cli.teleop_device}'. Supported: 'keyboard', 'gamepad', 'so101leader',"
-            " 'bi-so101leader', 'lekiwi-keyboard', 'lekiwi-leader', 'lekiwi-gamepad'."
+            " 'bi-so101leader', 'lekiwi-keyboard', 'lekiwi-leader', 'lekiwi-gamepad', 'xle-leader'."
         )
 
     # add teleoperation key for env reset
