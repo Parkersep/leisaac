@@ -250,3 +250,12 @@ class AmazonTruckBiArmEnvCfg(BiArmTaskEnvCfg):
 
         self.actions.right_gripper_action.asset_name = "left_arm"
         self.actions.right_gripper_action.joint_names = ["Jaw_2"]
+
+        # --- Base Patch ---
+        self.actions.base_action.asset_name = "left_arm"
+        self.actions.base_action.joint_names = [
+            "root_x_axis_joint",
+            "root_y_axis_joint",
+            "root_z_rotation_joint",
+        ]
+        self.actions.base_action.scale = 1.0

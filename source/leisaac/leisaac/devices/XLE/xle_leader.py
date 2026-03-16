@@ -60,13 +60,15 @@ class XLE_leader(Device):
         Creates the mappings from physical keyboard keys to local velocity vectors.
         """
         # WHY: Separates the mathematical intent of the movement from the physical key pressed.
+        self.translation = 10
+        self.rotation = 5
         self._VEL_COMMAND_MAPPING = {
-            "forward": np.asarray([1.0, 0.0, 0.0]),
-            "backward": np.asarray([-1.0, 0.0, 0.0]),
-            "left": np.asarray([0.0, 1.0, 0.0]),
-            "right": np.asarray([0.0, -1.0, 0.0]),
-            "rotate_left": np.asarray([0.0, 0.0, 1.0]),
-            "rotate_right": np.asarray([0.0, 0.0, -1.0]),
+            "forward": np.asarray([self.translation, 0.0, 0.0]),
+            "backward": np.asarray([-self.translation, 0.0, 0.0]),
+            "left": np.asarray([0.0, self.translation, 0.0]),
+            "right": np.asarray([0.0, -self.translation, 0.0]),
+            "rotate_left": np.asarray([0.0, 0.0, self.rotation]),
+            "rotate_right": np.asarray([0.0, 0.0, -self.rotation]),
         }
 
         # WHY: Maps string names to keys for easy remapping if you decide to switch from WASD to Arrow keys later.
@@ -107,7 +109,6 @@ class XLE_leader(Device):
 
             if event.input.name in self._WHEEL_INPUT_KEY_MAPPING.keys():
                 vel_key = self._WHEEL_INPUT_KEY_MAPPING[event.input.name]
-                print(f"Base command: {vel_key}")
                 scale_key = "theta_vel" if "rotate" in vel_key else "xy_vel"
 
                 # WHY: Using '+=' allows the operator to press 'W' and 'A' simultaneously to strafe diagonally.
@@ -131,29 +132,11 @@ class XLE_leader(Device):
 
     def get_device_state(self) -> Dict[str, np.ndarray]:
         """
-        Calculates the global frame velocities for the prismatic joints and packages them
-        with the hardware arm states.
+        Returns the raw velocity command for the base and packages it with arm states.
         """
-        # WHY: We use the exact joint name from your USD image to find the robot's heading angle in radians.
-        theta = (
-            self.env.scene["left_arm"]
-            .data.joint_pos[0, self._joint_names.index("root_z_rotation_joint")]
-            .item()
-        )
-
-        local_vx = self._vel_command[0]
-        local_vy = self._vel_command[1]
-
-        # WHY: Prismatic joints move along the global X/Y grid. We must rotate the local WASD commands by 'theta'
-        # so the robot drives straight relative to where its camera is currently pointing.
-        cos_theta = np.cos(theta)
-        sin_theta = np.sin(theta)
-        world_vx = local_vx * cos_theta - local_vy * sin_theta
-        world_vy = local_vx * sin_theta + local_vy * cos_theta
-
-        world_vtheta = self._vel_command[2]
-
-        base_action = np.array([world_vx, world_vy, world_vtheta])
+        # WHY: The prismatic and revolute joints at the articulation root are
+        # intended to move the entire robot body directly relative to its own axes.
+        base_action = self._vel_command.copy()
 
         raw_left = self.left_leader.get_device_state()
         raw_right = self.right_leader.get_device_state()
